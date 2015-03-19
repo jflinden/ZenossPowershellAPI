@@ -30,3 +30,30 @@ Function zWinGetDevices
 
     $devJSON.result.devices 
 }
+
+Function zWinGetHostUID
+{
+    param($ipOrHost,$type);
+
+    $ROUTER_ENDPOINT = "device_router"
+    $ROUTER_ACTION = "DeviceRouter"
+    $ROUTER_METHOD = "getDevices"
+    
+    if($type -match "name")
+    { 
+        $DATA = '{"params":{"name":"' + $ipOrHost + '"}}'
+    }
+    elseif($type -match "ip")
+    {
+        $DATA = '{"params":{"ipAddress":"' + $ipOrHost + '"}}'
+    }
+    else 
+    {
+        Write-Output "Please Specify Valid type ('name' or 'ip')"
+    }
+
+    
+
+    $devJSON = zWinPost $ROUTER_ENDPOINT $ROUTER_ACTION $ROUTER_METHOD $DATA
+    return $devJSON.result.devices.uid
+}
