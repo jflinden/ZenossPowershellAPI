@@ -31,29 +31,54 @@ Function zWinGetDevices
     $devJSON.result.devices 
 }
 
+Function zIPorHostname
+{
+    param($ipOrHostname);
+    $result = "ipAddress";
+    Try
+    {
+        [ipaddress]$ipOrHostname|Out-Null;
+         
+    }
+    Catch
+    {
+        $result = "name";
+    }
+    
+    return $result;
+}
+
 Function zWinGetHostUID
 {
-    param($ipOrHost,$type);
+    param($ipOrHost);
 
-    $ROUTER_ENDPOINT = "device_router"
-    $ROUTER_ACTION = "DeviceRouter"
-    $ROUTER_METHOD = "getDevices"
+    $ROUTER_ENDPOINT = "device_router";
+    $ROUTER_ACTION = "DeviceRouter";
+    $ROUTER_METHOD = "getDevices";
     
-    if($type -match "name")
+    $type = zIPorHostname $ipOrHost;
+    
+    Try
     { 
-        $DATA = '{"params":{"name":"' + $ipOrHost + '"}}'
+        $DATA = '{"params":{"'+ $type + '":"' + $ipOrHost + '"}}';
     }
-    elseif($type -match "ip")
-    {
-        $DATA = '{"params":{"ipAddress":"' + $ipOrHost + '"}}'
-    }
-    else 
+   
+    Catch 
     {
         Write-Output "Please Specify Valid type ('name' or 'ip')"
     }
 
     
 
-    $devJSON = zWinPost $ROUTER_ENDPOINT $ROUTER_ACTION $ROUTER_METHOD $DATA
-    return $devJSON.result.devices.uid
+    $devJSON = zWinPost $ROUTER_ENDPOINT $ROUTER_ACTION $ROUTER_METHOD $DATA;
+    
+    If($devJSON.result.totalCount -eq 0)
+    {
+        Write-Host "Host not found";
+    }
+    Else
+    {
+        return $devJSON.result.devices.uid;
+    }
+
 }
